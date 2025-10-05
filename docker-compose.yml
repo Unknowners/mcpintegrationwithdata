@@ -27,7 +27,7 @@ services:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
       - MCP_JIRA_HOST=http://mcp-jira:3001
-      - MCP_NOTION_HOST=http://mcp-notion:3002
+      - MCP_NOTION_HOST=http://mcp-notion:3022
       - MCP_SUPABASE_HOST=http://mcp-supabase:3000
       - REDIS_URL=redis://redis:6379
     depends_on:
@@ -39,6 +39,12 @@ services:
       - ./onboardai-api:/app
     networks:
       - onboardai-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.onboardai.rule=Host(`ai-hack-mcpetc-gcbplx-d53e53-157-180-26-155.traefik.me`)"
+      - "traefik.http.routers.onboardai.entrypoints=websecure"
+      - "traefik.http.routers.onboardai.tls.certresolver=letsencrypt"
+      - "traefik.http.services.onboardai.loadbalancer.server.port=8000"
 
   # MCP сервер для інтеграції з Jira
   mcp-jira:
