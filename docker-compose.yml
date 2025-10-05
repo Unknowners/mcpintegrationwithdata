@@ -17,7 +17,7 @@ services:
       - onboardai-network
 
   # Основний FastAPI додаток OnboardAI
-  onboardai-api:
+  main:
     build:
       context: ./onboardai-api
       dockerfile: Dockerfile
