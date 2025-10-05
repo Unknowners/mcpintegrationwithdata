@@ -1,0 +1,93 @@
+# Docker Compose конфігурація OnboardAI
+
+services:
+  # Наш власний Supabase MCP сервер для DocuMinds
+  mcp-supabase:
+    build:
+      context: ./mcp-servers/mcp-supabase
+      dockerfile: Dockerfile
+    ports:
+      - "3033:3000"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_PROJECT_ID=${SUPABASE_PROJECT_ID}
+    restart: unless-stopped
+    networks:
+      - onboardai-network
+
+  # Основний FastAPI додаток OnboardAI
+  onboardai-api:
+    build:
+      context: ./onboardai-api
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - MCP_JIRA_HOST=http://mcp-jira:3001
+      - MCP_NOTION_HOST=http://mcp-notion:3002
+      - MCP_SUPABASE_HOST=http://mcp-supabase:3000
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+      - mcp-jira
+      - mcp-notion
+      - mcp-supabase
+    volumes:
+      - ./onboardai-api:/app
+    networks:
+      - onboardai-network
+
+  # MCP сервер для інтеграції з Jira
+  mcp-jira:
+    build:
+      context: ./mcp-servers/mcp-jira
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - JIRA_URL=${JIRA_URL}
+      - JIRA_CLIENT_ID=${JIRA_CLIENT_ID}
+      - JIRA_CLIENT_SECRET=${JIRA_CLIENT_SECRET}
+      - JIRA_REFRESH_TOKEN=${JIRA_REFRESH_TOKEN}
+    volumes:
+      - ./mcp-servers/mcp-jira:/app
+      - /app/node_modules
+    networks:
+      - onboardai-network
+
+  # MCP сервер для інтеграції з Notion
+  mcp-notion:
+    build:
+      context: ./mcp-servers/mcp-notion
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3022"
+    environment:
+      - NOTION_API_KEY=${NOTION_API_KEY}
+      - NOTION_DATABASE_ID=${NOTION_DATABASE_ID}
+    volumes:
+      - ./mcp-servers/mcp-notion:/app
+      - /app/node_modules
+    networks:
+      - onboardai-network
+
+  # Redis для кешування та черг
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - onboardai-network
+
+
+volumes:
+  redis_data:
+
+networks:
+  onboardai-network:
+    driver: bridge
