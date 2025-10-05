@@ -14,6 +14,47 @@ OnboardAI допомагає компаніям зменшити час адап
 - **Redis** - Кешування та черги завдань
 - **Nginx** - Проксі та балансування навантаження
 
+## 🌐 Доступні сервіси та порти
+
+| Сервіс | Порт | Опис | Документація |
+|--------|------|------|--------------|
+| 🚀 **OnboardAI API** | 8000 | Головний FastAPI сервер | http://localhost:8000/docs |
+| 🗄️ **Supabase MCP** | 3033 | DocuMinds інтеграція | http://localhost:3033 |
+| 🎯 **Jira MCP** | 3001 | Jira інтеграція | http://localhost:3001 |
+| 📚 **Notion MCP** | 3022 | Notion інтеграція | http://localhost:3022 |
+| 🔧 **Redis** | 6379 | Кеш та черги | localhost:6379 |
+
+## 📋 Основні ендпоінти
+
+### 🚀 OnboardAI API (Port 8000)
+- `GET /health` - Перевірка стану всіх сервісів
+- `GET /docs` - Swagger UI документація
+- `POST /api/v1/onboarding/create` - Створення плану онбордингу
+- `GET /api/v1/progress/{employee_id}` - Прогрес онбордингу
+- `GET /api/v1/documinds/resources` - Ресурси з DocuMinds
+- `GET /api/v1/qa/answer` - Q&A система
+- `POST /api/v1/vectorization/start` - Векторизація знань
+- `GET /api/v1/ai/contextual-answer` - AI помічник
+
+### 🗄️ Supabase MCP (Port 3033)
+- `GET /health` - Стан сервера
+- `GET /api/organizations` - Список організацій
+- `GET /api/integrations/{orgId}` - Інтеграції організації
+- `GET /api/resources/{integrationId}` - Ресурси інтеграції
+- `GET /api/database-info` - Аналіз структури БД
+
+### 🎯 Jira MCP (Port 3001)
+- `GET /health` - Стан сервера
+- `GET /api/onboarding-tasks` - Задачі онбордингу
+- `POST /api/onboarding-tasks` - Створення задачі
+- `GET /api/projects/stats` - Статистика проектів
+
+### 📚 Notion MCP (Port 3022)
+- `GET /health` - Стан сервера
+- `GET /api/onboarding-resources` - Ресурси онбордингу
+- `POST /api/search` - Пошук в Notion
+- `POST /api/pages` - Створення сторінки
+
 ## 🚀 Швидкий запуск
 
 ### 1. Підготовка середовища
@@ -33,20 +74,70 @@ cp env.example .env
 Відредагуйте `.env` файл:
 
 ```env
-# Supabase конфігурація
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
+# DocuMinds Supabase (єдиний джерело правди)
+SUPABASE_URL=https://rbmepcfznvcskxayuisp.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
-# Jira конфігурація (опціонально)
-JIRA_URL=https://your-domain.atlassian.net
-JIRA_CLIENT_ID=your-jira-client-id
-JIRA_CLIENT_SECRET=your-jira-client-secret
-JIRA_REFRESH_TOKEN=your-jira-refresh-token
+# AI та Vector сервіси (глобальні)
+OPENAI_API_KEY=sk-your-openai-key
+PINECONE_API_KEY=your-pinecone-key
+PINECONE_ENVIRONMENT=us-east-1-aws
 
-# Notion конфігурація (опціонально)
-NOTION_API_KEY=your-notion-api-key
+# ❌ НЕ МАЄ глобальних кредитів до Jira/Notion!
+# Кредити отримуються ДИНАМІЧНО з DocuMinds integration_credentials
+```
 
-DEBUG=true
+### 3. Запуск проекту
+
+```bash
+# Автоматичний запуск (рекомендується)
+./start.sh
+
+# Або вручну
+docker-compose up -d
+```
+
+### 4. Перевірка стану сервісів
+
+```bash
+# Перевірка всіх сервісів
+node test-services.js
+
+# Перевірка конкретного сервісу
+curl http://localhost:8000/health
+```
+
+## 🎯 Приклади використання
+
+### 👤 Створення плану онбордингу
+```bash
+curl -X POST http://localhost:8000/api/v1/onboarding/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Іван Іванов",
+    "email": "ivan@techcorp.com",
+    "role": "Frontend Developer",
+    "department": "Engineering",
+    "start_date": "2024-02-01",
+    "manager_email": "manager@techcorp.com",
+    "skills_required": ["React", "TypeScript"],
+    "resources_needed": ["Development Environment"]
+  }'
+```
+
+### 🤔 Запитання до AI помічника
+```bash
+curl "http://localhost:8000/api/v1/qa/answer?question=Як налаштувати розробницьке середовище?&role=Frontend Developer"
+```
+
+### 📚 Отримання ресурсів з DocuMinds
+```bash
+curl "http://localhost:8000/api/v1/documinds/resources?organization_domain=techcorp.com&integration_type=notion"
+```
+
+### 🧠 Векторизація корпоративних знань
+```bash
+curl -X POST http://localhost:8000/api/v1/vectorization/start
 ```
 
 ### 3. Запуск проекту
