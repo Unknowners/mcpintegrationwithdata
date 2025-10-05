@@ -91,8 +91,19 @@ MCP_NOTION_HOST = os.getenv("MCP_NOTION_HOST", "http://mcp-notion:3002")
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
 
 # Ініціалізація клієнтів
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
-redis_client = redis.from_url(REDIS_URL)
+try:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+    print(f"✅ Supabase підключено: {SUPABASE_URL}")
+except Exception as e:
+    print(f"❌ Помилка підключення до Supabase: {e}")
+    supabase = None
+
+try:
+    redis_client = redis.from_url(REDIS_URL)
+    print(f"✅ Redis підключено: {REDIS_URL}")
+except Exception as e:
+    print(f"❌ Помилка підключення до Redis: {e}")
+    redis_client = None
 
 # Ініціалізація векторного сервісу
 vector_service = None

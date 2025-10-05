@@ -1,11 +1,11 @@
-# Docker Compose для Dokploy - Кореневий файл
+# Docker Compose для Dokploy - Максимально простий
 version: '3.8'
 
 services:
   main:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: onboardai-api/Dockerfile
     ports:
       - "8000:8000"
     environment:
